@@ -1,5 +1,5 @@
 {
-  "name": "sassutil",
+  "name": "sassu",
   "version": "1.0.0",
   "description": "Another Sass Utility for Node",
   "main": "Sassu.js",
@@ -28,6 +28,6 @@
     "normalize.scss": "^0.1.0"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "mocha test/test*.js"
   }
 }
