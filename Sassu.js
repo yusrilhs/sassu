@@ -70,6 +70,13 @@ function cleanCwdStr(filepath) {
  */
 const Sassu = function(workDir, opts) {
     this.workDir = path.join(process.cwd(), workDir);
+    
+    // Exit if work directory doesn't exists
+    if (!fs.existsSync(this.workDir)) {
+        logError(`${this.workDir} doesn't exists`);
+        process.exit(1);
+    }
+
     this.opts = extend(Sassu.DEFAULT_OPTIONS, opts);
 
     log('Starting Sassu');
