@@ -1,6 +1,9 @@
 #!/usr/bin/env node
 const ArgumentParser = require('argparse').ArgumentParser
     , fs = require('fs')
+    , path = require('path')
+    , chalk = require('chalk')
+    , stripJsonComments = require('strip-json-comments')
     , pkg = require('./package.json')
     , Sassu = require('./Sassu');
 
@@ -29,4 +32,23 @@ parser.addArgument(
 );
 
 let args = parser.parseArgs();
-let sassu = new Sassu(args.dir);
+let sassurc = path.join(process.cwd(), '.sassurc');
+
+fs.readFile(sassurc, function(err, result) {
+    let sassu;
+    
+    if (!err) {
+        try {
+            let optString = stripJsonComments(result.toString());
+            let opts = JSON.parse(optString);
+            sassu = new Sassu(args.dir, opts);
+        } catch(error) {
+            console.log(chalk.red(`Invalid configuration ${sassurc}\n${error}`));
+            process.exit(1);
+        }
+    } else {
+        sassu = new Sassu(args.dir);
+    }
+
+    sassu[args.task]();
+});
