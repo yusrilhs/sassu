@@ -87,7 +87,7 @@ const Sassu = function(workDir, opts) {
  * @type {Object}
  */
 Sassu.DEFAULT_OPTIONS = {
-    dest: '',
+    dest: 'dist',
     encoding: 'utf-8',
     includePaths: [],
     indentType: 'space',
