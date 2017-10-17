@@ -1,6 +1,7 @@
 const path = require('path')
     , fs = require('fs')
     , chalk = require('chalk')
+    , events = require('events')
     , globby = require('globby')
     , replaceExt = require('replace-ext')
     , extend = require('extend')
@@ -84,6 +85,8 @@ const Sassu = function(workDir, opts) {
     }
 
     this.opts = extend(Sassu.DEFAULT_OPTIONS, opts);
+    // Event emitter
+    this.eventEmitter = new events.EventEmitter();
 };
 
 /**
@@ -133,6 +136,25 @@ Sassu.prototype.build = function() {
 };
 
 /**
+ * Register listener event
+ * @param  {String}   evt 
+ * @param  {Function} cb  
+ * @return {Void}         
+ */
+Sassu.prototype.on = function(evt, cb) {
+    this.eventEmitter.on(evt, cb);
+};
+
+/**
+ * Remove listener event
+ * @param  {String}   evt 
+ * @return {Void}         
+ */
+Sassu.prototype.removeListener = function(evt) {
+    this.eventEmitter.removeListener(evt);
+};
+
+/**
  * Filter main files only to compile sass
  * @param  {Function} cb 
  * @return {Void}       
@@ -157,6 +179,48 @@ Sassu.prototype.filterFiles = function(cb) {
 };
 
 /**
+ * Get output option for build sass
+ * @param  {String} outputStyle 
+ * @param  {String} file        
+ * @return {Object}             
+ */
+Sassu.prototype.getOutputOption = function(outputStyle, file) {
+    let option = {
+        includePaths: this.opts.includePaths,
+        indentType: this.opts.indentType,
+        indentWidth: this.opts.indentWidth,
+        linefeed: this.opts.lineWidth,
+        outputStyle: outputStyle,
+        precision: this.opts.indentType,
+        sourceComments: this.opts.sourceComments
+    };
+    
+    // Set file for build
+    option.file = file;
+
+    // Make sure .sass file indentedSyntax true
+    if (path.extname(file) == '.sass') {
+        option.indentedSyntax = true;
+    }
+
+    let basename = path.basename(file);
+
+    // Outfile options
+    option.outFile = (this.opts.outputExtnames[outputStyle]) ?  
+                            replaceExt(path.join(this.__outputDir__, basename), this.opts.outputExtnames[outputStyle]) :
+                            replaceExt(path.join(this.__outputDir__, basename), '.css');
+
+    // SourceMap options
+    if (this.opts.outputSourcemaps[outputStyle]) {
+        option.sourceMap = replaceExt(option.outFile, '.map');
+        option.sourceMapContents = this.opts.sourceMapContents;
+        option.sourceMapEmbed = this.opts.sourceMapEmbed;
+    }
+
+    return option;
+};
+
+/**
  * Build Sass files
  * @param  {Array} files 
  * @return {Void}        
@@ -166,9 +230,10 @@ Sassu.prototype.buildSass = function(files) {
     let sassu = this;
     
     // Make directory for output destination  
-    let outputDir = path.join(process.cwd(), sassu.opts.dest);
+    this.__outputDir__ = path.join(process.cwd(), sassu.opts.dest);
+    
     try {
-        mkdirp.sync(outputDir);
+        mkdirp.sync(this.__outputDir__);
     } catch(error) {
         logError(error);
         return;
@@ -176,48 +241,21 @@ Sassu.prototype.buildSass = function(files) {
     
     log('Building sass files');
 
+    // Promise array
+    // let promiseArray = [];
+
     files.forEach(function(file) {
         // Tracking error reported
         let errorReported = false;
         // Loop each output
         for (let outputStyle in sassu.opts.outputStyles) {
 
-            let nodeSassOptions = {
-                includePaths: sassu.opts.includePaths,
-                indentType: sassu.opts.indentType,
-                indentWidth: sassu.opts.indentWidth,
-                linefeed: sassu.opts.lineWidth,
-                outputStyle: outputStyle,
-                precision: sassu.opts.indentType,
-                sourceComments: sassu.opts.sourceComments
-            };
+            let nSassOpts = sassu.getOutputOption(outputStyle, file);
 
-            // Set file for build
-            nodeSassOptions.file = file;
+            log(`Build ${chalk.bold(outputStyle)} ${chalk.cyan(cleanCwdStr(file) + ' > ' + cleanCwdStr(nSassOpts.outFile))}`);
 
-            // Make sure .sass file indentedSyntax true
-            if (path.extname(file) == '.sass') {
-                nodeSassOptions.indentedSyntax = true;
-            }
-
-            let basename = path.basename(file);
-
-            // Outfile options
-            nodeSassOptions.outFile = (sassu.opts.outputExtnames[outputStyle]) ?  
-                                    replaceExt(path.join(outputDir, basename), sassu.opts.outputExtnames[outputStyle]) :
-                                    replaceExt(path.join(outputDir, basename), '.css');
-
-            // SourceMap options
-            if (sassu.opts.outputSourcemaps[outputStyle]) {
-                nodeSassOptions.sourceMap = replaceExt(nodeSassOptions.outFile, '.map');
-                nodeSassOptions.sourceMapContents = sassu.opts.sourceMapContents;
-                nodeSassOptions.sourceMapEmbed = sassu.opts.sourceMapEmbed;
-            }
-
-            log(`Build ${chalk.bold(outputStyle)} ${chalk.cyan(cleanCwdStr(file) + ' > ' + cleanCwdStr(nodeSassOptions.outFile))}`);
-
-            
-            let result = sass.render(nodeSassOptions, function(errSass, result) {
+            // Start render sass
+            let result = sass.render(nSassOpts, function(errSass, result) {
                 if (!errSass) {
                     let css = result.css.toString();
 
@@ -245,35 +283,26 @@ Sassu.prototype.buildSass = function(files) {
                             return (sassu.opts.autoprefixer) ? 
                                     postCss([require('autoprefixer')]).process(cleaned.css) :
                                     cleaned.css;
-                        }).then(function(result) {
+                        }).then(function(cleaned) {
                             // Is result not from autoprefixer?
-                            let cssContent = (typeof result == 'string') ?
-                                                result : result.css;
+                            let cssContent = (typeof cleaned == 'string') ?
+                                                cleaned : cleaned.css;
+                            sassu
+                                .writeFile(nSassOpts.outFile, cssContent, sassu.opts.encoding)
+                                .catch(logError);
                             
-                            fs.writeFile(nodeSassOptions.outFile, cssContent, sassu.opts.encoding, function(err) {
-                                if (!err) {
-                                    log(`Finished build ${chalk.bold(outputStyle)} ${chalk.green(cleanCwdStr(nodeSassOptions.outFile))}`);
-                                } else {
-                                    logError(err);
-                                }
-                            });
-                        });
-                    
-                    // If sourcemaps defined
-                    if  (sassu.opts.outputSourcemaps[outputStyle]) {
-                        let map = result.map.toString();
-                        
-                        log(`Starting write sourcemap at ${chalk.cyan(cleanCwdStr(nodeSassOptions.outFile) + '.map')}`);
+                            // If sourcemaps defined
+                            if  (sassu.opts.outputSourcemaps[outputStyle]) {
+                                let map = result.map.toString();
+                                        
+                                log(`Starting write sourcemap at ${chalk.cyan(cleanCwdStr(nSassOpts.outFile) + '.map')}`);
 
-                        fs.writeFile(nodeSassOptions.outFile + '.map', map, sassu.opts.encoding, function(err) {
-                            if (!err) {
-                                log(`Finished write sourcemap at ${chalk.green(cleanCwdStr(nodeSassOptions.outFile) + '.map')}`);
-                            } else {
-                                logError(err);
+                                sassu
+                                    .writeFile(nSassOpts.outFile + '.map', map, sassu.opts.encoding)
+                                    .catch(logError);      
                             }
                         });
-
-                    }
+                    
                 } else {
                     if (!errorReported) {
                         // Error will be pad because time log
@@ -285,7 +314,26 @@ Sassu.prototype.buildSass = function(files) {
                 }
             });
         }
+    });
+};
 
+/**
+ * Write file
+ * @param  {String}   filePath 
+ * @param  {String}   fileContent 
+ * @param  {String}   encoding 
+ * @return {Promise}                
+ */
+Sassu.prototype.writeFile = function(filePath, fileContent, encoding) {
+    return new Promise(function(resolve, reject) {
+        fs.writeFile(filePath, fileContent, encoding, function(err) {
+            if (err) {
+                return reject(new Error(err));
+            } else {
+                log(`Finished write ${chalk.green(cleanCwdStr(filePath))}`);
+                return resolve();
+            }
+        }); 
     });
 };
 
@@ -301,9 +349,9 @@ Sassu.prototype.watch = function() {
 
     sassu.filterFiles(function(files) {
         sassu.buildSass(files);
-
+        // Watch after build finished
         log(`Watching: ${chalk.blue(sassu.workDir)}`);
-
+        
         let watcher = watch(sassu.workDir, {
             recursive: true,
             filter: /\.(scss|sass)$/ // Watch only sass or scss files
