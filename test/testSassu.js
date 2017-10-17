@@ -7,7 +7,7 @@ const chai = require('chai')
 chai.use(chaiProcess);
 chai.use(chaiAsPromised);
 
-let spawn = chaiProcess.spawn;
+let exec = chaiProcess.exec;
 
 describe('Test Sassu.js', function() {
 
@@ -16,8 +16,7 @@ describe('Test Sassu.js', function() {
     });
 
     it('Should return exit code 1 while directory doesn\'t exists', function() {
-        expect(spawn('node', ['../index.js', 'build', './test/maybe/scss'])).to.eventually.fail;
-        expect(spawn('node', ['../index.js', 'build', './test/maybe/scss'])).to.eventually.exitCode.eql(1);
+        return expect(exec('node ../index.js build ./test/maybe/scss')).to.eventually.exitCode.eql(1);
     });
 
 });
