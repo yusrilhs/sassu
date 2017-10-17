@@ -1,0 +1,31 @@
+{
+    // ==============================
+    // This file just for testing
+    // ==============================
+
+    "dest": "./test/build",
+    "encoding": "utf-8",
+    "includePaths": [
+        "./test/includes"
+    ],
+    "indentType": "space",
+    "indentWidth": 4,
+    "linefeed": "lf",
+    "outputStyles": {
+        "compressed": true,
+        "expanded": true
+    },
+    "outputExtnames": {
+        "compressed": ".min.css",
+        "expanded": ".css"
+    },
+    "outputSourcemaps": {
+        "compressed": true
+    },
+    "precision": 5,
+    "sourceComments": false,
+    "sourceMapContents": false,
+    "sourceMapEmbed": false,
+    "autoprefixer": null,
+    "oldie": null
+}
