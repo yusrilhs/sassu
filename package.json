@@ -31,6 +31,6 @@
     "rimraf": "^2.6.2"
   },
   "scripts": {
-    "test": "mocha test/test*.js"
+    "test": "mocha"
   }
 }
