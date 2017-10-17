@@ -78,8 +78,6 @@ const Sassu = function(workDir, opts) {
     }
 
     this.opts = extend(Sassu.DEFAULT_OPTIONS, opts);
-
-    log('Starting Sassu');
 };
 
 /**
