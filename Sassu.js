@@ -41,7 +41,7 @@ function currentTimeLog() {
  * @param  {String} str 
  * @return {Void}       
  */
-function log(str) {
+let log = function(str) {
     console.log(`${currentTimeLog()} ${str}`);
 }
 
@@ -50,7 +50,7 @@ function log(str) {
  * @param  {String} str 
  * @return {Void}       
  */
-function logError(str) {
+let logError = function(str) {
     console.error(`${currentTimeLog()} ${chalk.red(str)}`);
 }
 
@@ -61,6 +61,12 @@ function logError(str) {
  */
 function cleanCwdStr(filepath) {
     return filepath.replace(process.cwd(), '').substr(1);
+}
+
+// Silent while test module
+if (process.env.NODE_ENV == 'test') {
+    log = function() {};
+    logError = function() {};
 }
 
 /**
