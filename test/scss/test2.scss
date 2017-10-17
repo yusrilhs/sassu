@@ -1,0 +1,14 @@
+@import "imports/test_import";
+@import "test_include";
+
+body {
+    font-size: ($var2 + 20px);
+}
+
+p {
+    font-size: ($var2 + 30px);   
+}
+
+.content {
+    content: hello();
+}
