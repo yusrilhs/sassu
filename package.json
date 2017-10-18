@@ -27,10 +27,11 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "chai-fs": "^1.0.0",
+    "cross-env": "^5.1.0",
     "mocha": "^4.0.1",
     "rimraf": "^2.6.2"
   },
   "scripts": {
-    "test": "mocha"
+    "test": "cross-env NODE_ENV=test mocha"
   }
 }
