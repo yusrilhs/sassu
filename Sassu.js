@@ -8,6 +8,8 @@ const path = require('path')
     , mkdirp = require('mkdirp')
     , postCss = require('postcss')
     , autoprefixer = require('autoprefixer')
+    , oldie = require('oldie')
+    , flexbugFixes = require('postcss-flexbugs-fixes')
     , watch = require('node-watch')
     , sass = require('node-sass');
 
@@ -148,10 +150,11 @@ Sassu.prototype.on = function(evt, cb) {
 /**
  * Remove listener event
  * @param  {String}   evt 
+ * @param  {Function} cb 
  * @return {Void}         
  */
-Sassu.prototype.removeListener = function(evt) {
-    this.eventEmitter.removeListener(evt);
+Sassu.prototype.removeListener = function(evt, cb) {
+    this.eventEmitter.removeListener(evt, cb);
 };
 
 /**
@@ -226,23 +229,35 @@ Sassu.prototype.getOutputOption = function(outputStyle, file) {
  * @return {Void}        
  */
 Sassu.prototype.buildSass = function(files) {
+    // Time logging
+    let timeStart = new Date();
+
     // Sassu instance
     let sassu = this;
     
     // Make directory for output destination  
-    this.__outputDir__ = path.join(process.cwd(), sassu.opts.dest);
-    
-    try {
-        mkdirp.sync(this.__outputDir__);
-    } catch(error) {
-        logError(error);
-        return;
-    } 
-    
-    log('Building sass files');
+    if (!this.__outputDir__) {
+        this.__outputDir__ = path.join(process.cwd(), sassu.opts.dest);
+
+        // Create directory only 1 time
+        try {
+            mkdirp.sync(this.__outputDir__);
+        } catch(error) {
+            logError(error);
+            return;
+        } 
+    }
+
+    // For reuse option
+    // This will reduce time for build
+    if (!this.__fileOptions) {
+        this.__fileOptions = {};
+    }
+
+    log(chalk.bold('Building sass files'));
 
     // Promise array
-    // let promiseArray = [];
+    let promiseArray = [];
 
     files.forEach(function(file) {
         // Tracking error reported
@@ -250,71 +265,85 @@ Sassu.prototype.buildSass = function(files) {
         // Loop each output
         for (let outputStyle in sassu.opts.outputStyles) {
 
-            let nSassOpts = sassu.getOutputOption(outputStyle, file);
+            sassu.__fileOptions[file + outputStyle] = (sassu.__fileOptions[file + outputStyle]) ?
+                            sassu.__fileOptions[file + outputStyle] : sassu.getOutputOption(outputStyle, file);
+
+            let nSassOpts = sassu.__fileOptions[file + outputStyle];
 
             log(`Build ${chalk.bold(outputStyle)} ${chalk.cyan(cleanCwdStr(file) + ' > ' + cleanCwdStr(nSassOpts.outFile))}`);
 
+            // Sourcemap
+            let map;
+
             // Start render sass
-            let result = sass.render(nSassOpts, function(errSass, result) {
-                if (!errSass) {
-                    let css = result.css.toString();
+            promiseArray.push(new Promise(function(resolve, reject) {
+                sass.render(nSassOpts, function(errSass, result) {
+                    if (errSass) {
+                        if (!errorReported) {
+                            errorReported = true;
+                            reject(errSass.formatted.replace(/\n/g, '\n' + ' '.repeat(11)));
+                        }
+                    } else {
+                        resolve(result);
+                    }
+                });
+            }).then(function(result) {
+                let css = result.css.toString();
 
-                    let postCssPlugins = [];
+                // Set sourcemap if it defined
+                map = result.map;
 
+                if (!nSassOpts['postcss']) {
+                    nSassOpts['postcss'] = [];
+                    
                     // Add flexbugs fixes plugins
-                    postCssPlugins.push(require('postcss-flexbugs-fixes'));
+                    nSassOpts['postcss'].push(flexbugFixes);
 
                     // If oldie is set
                     if (sassu.opts.oldie) {
-                        postCssPlugins.push(require('oldie')(sassu.opts.oldie));
+                        nSassOpts['postcss'].push(oldie(sassu.opts.oldie));
                     }
 
                     // If autoprefixer is set
                     if (sassu.opts.autoprefixer) {
-                        postCssPlugins.push(require('autoprefixer')({add: false, browsers: []}));
+                        nSassOpts['postcss'].push(autoprefixer({add: false, browsers: []}));
                     }
+                };
 
-                    let cleaner = postCss(postCssPlugins);
-                    
-                    cleaner
-                        .process(css)
-                        .then(function(cleaned) {
-                            // is using autoprefixer?
-                            return (sassu.opts.autoprefixer) ? 
-                                    postCss([require('autoprefixer')]).process(cleaned.css) :
-                                    cleaned.css;
-                        }).then(function(cleaned) {
-                            // Is result not from autoprefixer?
-                            let cssContent = (typeof cleaned == 'string') ?
-                                                cleaned : cleaned.css;
-                            sassu
-                                .writeFile(nSassOpts.outFile, cssContent, sassu.opts.encoding)
-                                .catch(logError);
-                            
-                            // If sourcemaps defined
-                            if  (sassu.opts.outputSourcemaps[outputStyle]) {
-                                let map = result.map.toString();
-                                        
-                                log(`Starting write sourcemap at ${chalk.cyan(cleanCwdStr(nSassOpts.outFile) + '.map')}`);
+                return postCss(nSassOpts['postcss']).process(css);
+            }).then(function(cleaned) {
+                // is using autoprefixer?
+                return (sassu.opts.autoprefixer) ? 
+                        postCss([autoprefixer]).process(cleaned.css) :
+                        cleaned.css;
+            }).then(function(cleaned) {
+                // Is result not from autoprefixer?
+                let cssContent = (typeof cleaned == 'string') ?
+                                    cleaned : cleaned.css;
+                return sassu
+                    .writeFile(nSassOpts.outFile, cssContent, sassu.opts.encoding);                     
+            }).then(function() {
+                // If sourcemaps defined
+                if  (map) {        
+                    log(`Starting write sourcemap at ${chalk.cyan(cleanCwdStr(nSassOpts.outFile) + '.map')}`);
 
-                                sassu
-                                    .writeFile(nSassOpts.outFile + '.map', map, sassu.opts.encoding)
-                                    .catch(logError);      
-                            }
-                        });
-                    
-                } else {
-                    if (!errorReported) {
-                        // Error will be pad because time log
-                        logError(errSass.formatted.replace(/\n/g, '\n' + ' '.repeat(11)));
-                        // Set it to true 
-                        // cause that can be multiple error reported
-                        errorReported = true;
-                    }
+                    return sassu
+                        .writeFile(nSassOpts.outFile + '.map', JSON.stringify(map), sassu.opts.encoding);      
                 }
-            });
+            }));
         }
     });
+
+    Promise.all(promiseArray)
+        .then(function() {
+            
+            log(chalk.bold('Build finished after ') + chalk.bold.blue(`${new Date() - timeStart}ms`));
+
+            sassu.eventEmitter.emit('finished_build');            
+        }).catch(function(err) {
+            logError(err);
+            sassu.eventEmitter.emit('finished_build');
+        });
 };
 
 /**
@@ -349,24 +378,27 @@ Sassu.prototype.watch = function() {
 
     sassu.filterFiles(function(files) {
         sassu.buildSass(files);
-        // Watch after build finished
-        log(`Watching: ${chalk.blue(sassu.workDir)}`);
         
-        let watcher = watch(sassu.workDir, {
-            recursive: true,
-            filter: /\.(scss|sass)$/ // Watch only sass or scss files
-        });
+        sassu.eventEmitter.once('finished_build', function() {
+            // Watch after build finished
+            log(`Watching: ${chalk.blue(sassu.workDir)}`);
+            
+            let watcher = watch(sassu.workDir, {
+                recursive: true,
+                filter: /\.(scss|sass)$/ // Watch only sass or scss files
+            });
 
-        watcher.on('change', function(evt, name) {
-            log(`${chalk.cyan(cleanCwdStr(name))} ${chalk.yellow('changed')}`);
-            sassu.buildSass(files);
-        });
+            watcher.on('change', function(evt, name) {
+                log(`${chalk.cyan(cleanCwdStr(name))} ${chalk.yellow('changed')}`);
+                sassu.buildSass(files);
+            });
 
-        watcher.on('error', function(err) {
-            logError(err);
-        });
+            watcher.on('error', function(err) {
+                logError(err);
+            });
 
-        process.on('SIGINT', watcher.close);
+            process.on('SIGINT', watcher.close);
+        });
     });
 };
 
