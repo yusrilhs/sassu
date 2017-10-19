@@ -183,6 +183,7 @@ Sassu.prototype.getOutputOption = function(outputStyle, file) {
     let option = {
         includePaths: this.opts.includePaths,
         indentType: this.opts.indentType,
+        indentedSyntax: this.opts.indentedSyntax,
         indentWidth: this.opts.indentWidth,
         linefeed: this.opts.lineWidth,
         outputStyle: outputStyle,
