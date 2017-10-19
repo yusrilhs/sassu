@@ -115,7 +115,7 @@ describe('Test Sassu', function() {
                     './test/includes'
                 ],
                 outputStyles: {
-                    compressed: true
+                    expanded: true
                 }
             });
 
