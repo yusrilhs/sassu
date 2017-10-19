@@ -1,12 +1,20 @@
 {
   "name": "sassu",
   "version": "1.0.0",
-  "description": "Another Sass Utility for Node",
+  "description": "Sassu is a command line utility for sass.",
   "main": "Sassu.js",
   "repository": "https://github.com/yusrilhs/sassu.git",
   "author": "Yusril Herlian Syah <yusrilhsyah@gmail.com>",
   "license": "MIT",
   "private": false,
+  "keywords": [
+    "sass",
+    "scss",
+    "cli",
+    "utility",
+    "watch",
+    "build"
+  ],
   "dependencies": {
     "argparse": "^1.0.9",
     "autoprefixer": "^7.1.5",
