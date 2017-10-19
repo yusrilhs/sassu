@@ -133,6 +133,7 @@ Sassu.prototype.build = function() {
     
     // Filter main files first
     sassu.filterFiles(function(files) {
+        sassu.prepareBuild();
         sassu.buildSass(files);
     });
 };
@@ -144,17 +145,7 @@ Sassu.prototype.build = function() {
  * @return {Void}         
  */
 Sassu.prototype.on = function(evt, cb) {
-    this.eventEmitter.on(evt, cb);
-};
-
-/**
- * Remove listener event
- * @param  {String}   evt 
- * @param  {Function} cb 
- * @return {Void}         
- */
-Sassu.prototype.removeListener = function(evt, cb) {
-    this.eventEmitter.removeListener(evt, cb);
+    this.eventEmitter.addListener(evt, cb);
 };
 
 /**
@@ -224,20 +215,13 @@ Sassu.prototype.getOutputOption = function(outputStyle, file) {
 };
 
 /**
- * Build Sass files
- * @param  {Array} files 
- * @return {Void}        
+ * Prepare build 
+ * @return {Void}
  */
-Sassu.prototype.buildSass = function(files) {
-    // Time logging
-    let timeStart = new Date();
-
-    // Sassu instance
-    let sassu = this;
-    
+Sassu.prototype.prepareBuild = function() {
     // Make directory for output destination  
     if (!this.__outputDir__) {
-        this.__outputDir__ = path.join(process.cwd(), sassu.opts.dest);
+        this.__outputDir__ = path.join(process.cwd(), this.opts.dest);
 
         // Create directory only 1 time
         try {
@@ -253,17 +237,34 @@ Sassu.prototype.buildSass = function(files) {
     if (!this.__fileOptions) {
         this.__fileOptions = {};
     }
+}
+
+/**
+ * Build Sass files
+ * @param  {Array} files 
+ * @return {Void}        
+ */
+Sassu.prototype.buildSass = function(files) {
+    // Time logging
+    let timeStart = new Date();
+
+    // Sassu instance
+    let sassu = this;
 
     log(chalk.bold('Building sass files'));
 
     // Promise array
+    // This for track builds
     let promiseArray = [];
-
+    
     files.forEach(function(file) {
         // Tracking error reported
         let errorReported = false;
         // Loop each output
         for (let outputStyle in sassu.opts.outputStyles) {
+            
+            // If not this output
+            if (!sassu.opts.outputStyles[outputStyle]) continue;
 
             sassu.__fileOptions[file + outputStyle] = (sassu.__fileOptions[file + outputStyle]) ?
                             sassu.__fileOptions[file + outputStyle] : sassu.getOutputOption(outputStyle, file);
@@ -320,23 +321,20 @@ Sassu.prototype.buildSass = function(files) {
                 // Is result not from autoprefixer?
                 let cssContent = (typeof cleaned == 'string') ?
                                     cleaned : cleaned.css;
-                return sassu
-                    .writeFile(nSassOpts.outFile, cssContent, sassu.opts.encoding);                     
+                return sassu.writeFile(nSassOpts.outFile, cssContent);                     
             }).then(function() {
                 // If sourcemaps defined
                 if  (map) {        
                     log(`Starting write sourcemap at ${chalk.cyan(cleanCwdStr(nSassOpts.outFile) + '.map')}`);
 
-                    return sassu
-                        .writeFile(nSassOpts.outFile + '.map', JSON.stringify(map), sassu.opts.encoding);      
+                    return sassu.writeFile(nSassOpts.outFile + '.map', JSON.stringify(map));      
                 }
             }));
         }
     });
 
     Promise.all(promiseArray)
-        .then(function() {
-            
+        .then(function() { 
             log(chalk.bold('Build finished after ') + chalk.bold.blue(`${new Date() - timeStart}ms`));
 
             sassu.eventEmitter.emit('finished_build');            
@@ -353,9 +351,10 @@ Sassu.prototype.buildSass = function(files) {
  * @param  {String}   encoding 
  * @return {Promise}                
  */
-Sassu.prototype.writeFile = function(filePath, fileContent, encoding) {
+Sassu.prototype.writeFile = function(filePath, fileContent) {
+    let sassu = this;
     return new Promise(function(resolve, reject) {
-        fs.writeFile(filePath, fileContent, encoding, function(err) {
+        fs.writeFile(filePath, fileContent, sassu.opts.encoding, function(err) {
             if (err) {
                 return reject(new Error(err));
             } else {
@@ -377,6 +376,7 @@ Sassu.prototype.watch = function() {
     log('Starting watch task');
 
     sassu.filterFiles(function(files) {
+        sassu.prepareBuild();
         sassu.buildSass(files);
         
         sassu.eventEmitter.once('finished_build', function() {
