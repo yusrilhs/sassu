@@ -100,6 +100,7 @@ Sassu.DEFAULT_OPTIONS = {
     encoding: 'utf-8',
     includePaths: [],
     indentType: 'space',
+    indentedSyntax: false,
     indentWidth: 2,
     linefeed: 'lf',
     outputStyles: {
