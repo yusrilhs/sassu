@@ -13,7 +13,7 @@ charset = utf-8
 indent_style = space
 indent_size = 4
 
-# Matches the exact files either package.json, .travis.yml and .babelrc
-[{package.json,.travis.yml}]
+# Matches the exact files either package.json, .travis.yml and .sassurc
+[{package.json,.travis.yml,.sassurc}]
 indent_style = space
 indent_size = 2
