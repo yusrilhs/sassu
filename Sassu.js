@@ -106,20 +106,16 @@ Sassu.DEFAULT_OPTIONS = {
     indentWidth: 2,
     linefeed: 'lf',
     outputStyles: {
-        compressed: true,
-        expanded: true
+        compressed: true
     },
     outputExtnames: {
-        compressed: '.min.css',
-        expanded: '.css'
+        compressed: '.min.css'
     },
     outputSourcemaps: {
         compressed: true
     },
     precision: 5,
     sourceComments: false,
-    sourceMapContents: false,
-    sourceMapEmbed: false,
     autoprefixer: null,
     oldie: null
 };
@@ -209,11 +205,7 @@ Sassu.prototype.getOutputOption = function(outputStyle, file) {
                             replaceExt(path.join(this.__outputDir__, basename), '.css');
 
     // SourceMap options
-    if (this.opts.outputSourcemaps[outputStyle]) {
-        option.sourceMap = replaceExt(option.outFile, '.map');
-        option.sourceMapContents = this.opts.sourceMapContents;
-        option.sourceMapEmbed = this.opts.sourceMapEmbed;
-    }
+    option.sourceMap = this.opts.outputSourcemaps[outputStyle];
 
     return option;
 };
@@ -267,22 +259,17 @@ Sassu.prototype.buildSass = function(files) {
         // Loop each output
         for (let outputStyle in sassu.opts.outputStyles) {
             
-            // If not this output
+            // If not this output style
             if (!sassu.opts.outputStyles[outputStyle]) continue;
-
+            
             sassu.__fileOptions[file + outputStyle] = (sassu.__fileOptions[file + outputStyle]) ?
                             sassu.__fileOptions[file + outputStyle] : sassu.getOutputOption(outputStyle, file);
 
-            let nSassOpts = sassu.__fileOptions[file + outputStyle];
-
-            log(`Build ${chalk.bold(outputStyle)} ${chalk.cyan(cleanCwdStr(file) + ' > ' + cleanCwdStr(nSassOpts.outFile))}`);
-
-            // Sourcemap
-            let map;
+            log(`Build ${chalk.bold(outputStyle)} ${chalk.cyan(cleanCwdStr(file) + ' > ' + cleanCwdStr(sassu.__fileOptions[file + outputStyle].outFile))}`);
 
             // Start render sass
             promiseArray.push(new Promise(function(resolve, reject) {
-                sass.render(nSassOpts, function(errSass, result) {
+                sass.render(sassu.__fileOptions[file + outputStyle], function(errSass, result) {
                     if (errSass) {
                         if (!errorReported) {
                             errorReported = true;
@@ -295,43 +282,52 @@ Sassu.prototype.buildSass = function(files) {
             }).then(function(result) {
                 let css = result.css.toString();
 
-                // Set sourcemap if it defined
-                map = result.map;
-
-                if (!nSassOpts['postcss']) {
-                    nSassOpts['postcss'] = [];
+                if (!sassu.__fileOptions[file + outputStyle]['postcss']) {
+                    sassu.__fileOptions[file + outputStyle]['postcss'] = [];
                     
                     // Add flexbugs fixes plugins
-                    nSassOpts['postcss'].push(flexbugFixes);
+                    sassu.__fileOptions[file + outputStyle]['postcss'].push(flexbugFixes);
 
                     // If oldie is set
                     if (sassu.opts.oldie) {
-                        nSassOpts['postcss'].push(oldie(sassu.opts.oldie));
+                        sassu.__fileOptions[file + outputStyle]['postcss'].push(oldie(sassu.opts.oldie));
                     }
 
                     // If autoprefixer is set
                     if (sassu.opts.autoprefixer) {
-                        nSassOpts['postcss'].push(autoprefixer({add: false, browsers: []}));
+                        sassu.__fileOptions[file + outputStyle]['postcss'].push(autoprefixer({add: false, browsers: []}));
                     }
                 };
 
-                return postCss(nSassOpts['postcss']).process(css);
+                // For sourcemaps
+                // because postcss will break the sourcemaps definition on css files
+                if (!sassu.__fileOptions[file + outputStyle]['postcss_process']) {
+                    sassu.__fileOptions[file + outputStyle]['postcss_process'] = result.map ? {
+                        map: { annotation: false },
+                        from: sassu.__fileOptions[file + outputStyle].file,
+                        to: sassu.__fileOptions[file + outputStyle].outFile
+                    } : {};
+                }
+
+                return postCss(sassu.__fileOptions[file + outputStyle]['postcss']).process(css, sassu.__fileOptions[file + outputStyle]['postcss_process']);
             }).then(function(cleaned) {
                 // is using autoprefixer?
                 return (sassu.opts.autoprefixer) ? 
-                        postCss([autoprefixer]).process(cleaned.css) :
-                        cleaned.css;
+                        postCss([autoprefixer(sassu.opts.autoprefixer)]).process(cleaned.css, sassu.__fileOptions[file + outputStyle]['postcss_process']) :
+                        cleaned;
             }).then(function(cleaned) {
-                // Is result not from autoprefixer?
-                let cssContent = (typeof cleaned == 'string') ?
-                                    cleaned : cleaned.css;
-                return sassu.writeFile(nSassOpts.outFile, cssContent);                     
-            }).then(function() {
+                log(`Starting write ${chalk.cyan(cleanCwdStr(sassu.__fileOptions[file + outputStyle].outFile))}`);
+
+                return sassu.writeFile(sassu.__fileOptions[file + outputStyle].outFile, cleaned.css)
+                            .then(function() {
+                                return cleaned.map;
+                            });                     
+            }).then(function(map) {
                 // If sourcemaps defined
                 if  (map) {        
-                    log(`Starting write sourcemap at ${chalk.cyan(cleanCwdStr(nSassOpts.outFile) + '.map')}`);
+                    log(`Starting write sourcemap at ${chalk.cyan(cleanCwdStr(sassu.__fileOptions[file + outputStyle].outFile) + '.map')}`);
 
-                    return sassu.writeFile(nSassOpts.outFile + '.map', JSON.stringify(map));      
+                    return sassu.writeFile(sassu.__fileOptions[file + outputStyle].outFile + '.map', JSON.stringify(map));      
                 }
             }));
         }
