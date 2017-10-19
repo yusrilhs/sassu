@@ -3,7 +3,7 @@ const ArgumentParser = require('argparse').ArgumentParser
     , fs = require('fs')
     , path = require('path')
     , chalk = require('chalk')
-    , stripJsonComments = require('strip-json-comments')
+    , yaml = require('js-yaml')
     , pkg = require('./package.json')
     , Sassu = require('./Sassu');
 
@@ -32,23 +32,23 @@ parser.addArgument(
 );
 
 let args = parser.parseArgs();
+
 let sassurc = path.join(process.cwd(), '.sassurc');
-
-fs.readFile(sassurc, function(err, result) {
+fs.readFile(sassurc, 'utf-8', function(error, content) {
     let sassu;
-    
-    if (!err) {
-        try {
-            let optString = stripJsonComments(result.toString());
-            let opts = JSON.parse(optString);
-            sassu = new Sassu(args.dir, opts);
-        } catch(error) {
-            console.log(chalk.red(`Invalid configuration ${sassurc}\n${error}`));
-            process.exit(1);
-        }
-    } else {
+    if (error) {
         sassu = new Sassu(args.dir);
+        sassu[args.task]();
+    } else {
+        try {
+            let opts = yaml.safeLoad(content, 'utf-8');
+            sassu = new Sassu(args.dir, opts);
+            sassu[args.task]();
+        } catch(err) {
+            console.log(chalk.red(err));
+        }
     }
-
-    sassu[args.task]();
+    
 });
+
+
