@@ -116,8 +116,8 @@ Sassu.DEFAULT_OPTIONS = {
     },
     precision: 5,
     sourceComments: false,
-    autoprefixer: null,
-    oldie: null
+    autoprefixer: false,
+    oldie: false
 };
 
 /**
@@ -261,7 +261,7 @@ Sassu.prototype.buildSass = function(files) {
             
             // If not this output style
             if (!sassu.opts.outputStyles[outputStyle]) continue;
-            
+
             sassu.__fileOptions[file + outputStyle] = (sassu.__fileOptions[file + outputStyle]) ?
                             sassu.__fileOptions[file + outputStyle] : sassu.getOutputOption(outputStyle, file);
 
