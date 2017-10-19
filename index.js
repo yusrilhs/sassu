@@ -6,8 +6,9 @@ const ArgumentParser = require('argparse').ArgumentParser
     , path = require('path')
     , chalk = require('chalk')
     , yaml = require('js-yaml')
-    , pkg = require('./package.json')
-    , Sassu = require('./Sassu');
+    , sassuCli = require('./src/core/cli')
+    , logError = require('./src/core/utils').logError
+    , pkg = require('./package.json');
 
 // Initialize parser
 let parser = new ArgumentParser({
@@ -35,22 +36,12 @@ parser.addArgument(
 
 let args = parser.parseArgs();
 
-let sassurc = path.join(process.cwd(), '.sassurc');
-fs.readFile(sassurc, 'utf-8', function(error, content) {
-    let sassu;
-    if (error) {
-        sassu = new Sassu(args.dir);
-        sassu[args.task]();
-    } else {
-        try {
-            let opts = yaml.safeLoad(content, 'utf-8');
-            sassu = new Sassu(args.dir, opts);
-            sassu[args.task]();
-        } catch(err) {
-            console.log(chalk.red(err));
-        }
-    }
-    
-});
+try {
+    // Trying to run sassu cli
+    sassuCli(parser.parseArgs());
+} catch(error) {
+    logError(error);
+    process.exit(1);
+}
 
 
