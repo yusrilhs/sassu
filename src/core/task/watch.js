@@ -1,3 +1,5 @@
+'use strict';
+
 const buildTask = require('./build')
     , DEFAULTS = require('../defaults');
 

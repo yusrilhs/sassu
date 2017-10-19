@@ -1,3 +1,5 @@
+'use strict';
+
 /**
  * Default options for sassu
  * @type {Object}
