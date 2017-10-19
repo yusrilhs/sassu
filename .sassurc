@@ -3,7 +3,6 @@
 # ==============================
 
 dest: "./test/build"
-encoding: "utf-8"
 
 includePaths: 
   - "./test/includes"
