@@ -1,3 +1,5 @@
+'use strict';
+
 const chai = require('chai')
     , should = chai.should()
     , spawn = require('child_process').spawn
