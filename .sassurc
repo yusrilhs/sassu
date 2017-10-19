@@ -26,8 +26,6 @@ outputSourcemaps:
 precision: 5
 
 sourceComments: false
-sourceMapContents: false
-sourceMapEmbed: false
 
-autoprefixer: null
-oldie: null
+autoprefixer: false
+oldie: false
