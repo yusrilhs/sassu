@@ -20,15 +20,17 @@
     "autoprefixer": "^7.1.5",
     "chalk": "^2.1.0",
     "extend": "^3.0.1",
-    "globby": "^6.1.0",
+    "gulp-sourcemaps": "^2.6.1",
     "js-yaml": "^3.10.0",
-    "mkdirp": "^0.5.1",
     "node-sass": "^4.5.3",
-    "node-watch": "^0.5.5",
     "oldie": "^1.3.0",
     "postcss": "^6.0.13",
     "postcss-flexbugs-fixes": "^3.2.0",
-    "replace-ext": "^1.0.0"
+    "replace-ext": "^1.0.0",
+    "through2": "^2.0.3",
+    "vinyl": "^2.1.0",
+    "vinyl-fs": "^2.4.4",
+    "vinyl-sourcemaps-apply": "^0.2.1"
   },
   "devDependencies": {
     "@evolopment/chai-process": "^1.0.2",
