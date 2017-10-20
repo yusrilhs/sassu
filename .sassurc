@@ -1,30 +1,44 @@
-# ==============================
-# This file just for testing
-# ==============================
-
+# Destination for this build
 dest: "./test/build"
 
+# Path to look for imported files
 includePaths: 
   - "./test/includes"
 
+# Indent type for output CSS (space | tab)
 indentType: "space"
-indentWidth: 4
+
+# Indent width; number of spaces or tabs (maximum value: 10)
+indentWidth: 2
+
+# Linefeed style (cr | crlf | lf | lfcr)
 linefeed: "lf"
 
+# CSS output styles for this build 
+# (nested | expanded | compact | compressed)
 outputStyles:
   compressed: true
   expanded: true
 
+# Extension for filename which prefered to outputStyles
+# (nested | expanded | compact | compressed)
 outputExtnames:
   compressed: ".min.css"
   expanded: ".css"
 
+# Source map which prefered to outputStyles
+# (nested | expanded | compact | compressed)
 outputSourcemaps:
   compressed: true
 
+# The amount of precision allowed in decimal numbers
 precision: 5
 
+# Include debug info in output
 sourceComments: false
 
+# Autoprefixer configuration 
 autoprefixer: false
+
+# Oldie configuration
 oldie: false
