@@ -112,8 +112,6 @@ module.exports = function(opts) {
         // Handle all promised sass.render
         Promise.all(promiseArray)
                .then(function() {
-                    // Send end event to stream
-                    through.emit('end');
                     cb();
                })
                .catch(logError);
