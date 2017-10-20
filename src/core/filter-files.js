@@ -6,7 +6,7 @@ const path = require('path')
 /**
  * Filter only sass and scss files to compile sass
  * @param   {Object}        opts
- * @return  {toThrough}       
+ * @return  {stream}       
  */
 module.exports = function(opts) {
     // Sass and scss files pattern
@@ -15,6 +15,6 @@ module.exports = function(opts) {
         path.join(opts.workDir, '/**/*.sass')
     ];
 
-    // Return toThrough stream
+    // Return stream
     return vfs.src(patterns);
 };
