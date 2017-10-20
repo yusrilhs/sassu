@@ -12,6 +12,11 @@ const path = require('path')
     , log = utils.log
     , logError = utils.logError;
 
+/**
+ * Build Sass
+ * @param  {Object} opts 
+ * @return {stream}      
+ */
 module.exports = function(opts) {
     // Starting build
     log(chalk.bold('Building sass files'));
@@ -20,7 +25,7 @@ module.exports = function(opts) {
         // Promise Array for track render node-sass async
         let promiseArray = [];
 
-        let through = this;
+        let stream = this;
 
         // Is Null
         if (file.isNull()) {
@@ -52,7 +57,7 @@ module.exports = function(opts) {
             // Is a blank file?
             if (!file.contents.length) {
                 file.path = replaceExt(file.path, outputOption.ext);
-                through.push(file);
+                stream.push(file);
                 continue;
             }
 
@@ -62,6 +67,7 @@ module.exports = function(opts) {
             let sassPromised = new Promise(function(resolve, reject) {
                 sass.render(outputOption, function(err, result) {
                     if (err) {
+                        stream.emit('error', err);
                         return reject(err);
                     } else {
                         
@@ -98,7 +104,7 @@ module.exports = function(opts) {
                         }
 
                         // Push into file vinyl
-                        through.push(cssFile);
+                        stream.push(cssFile);
 
                         return resolve();
                     }
