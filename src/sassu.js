@@ -1,7 +1,7 @@
 'use strict';
 
-const buildTask = require('./core/task/build')
-    , watchTask = require('./core/task/watch');
+const buildTask = require('./task/build')
+    , watchTask = require('./task/watch');
 
 /**
  * Export task
