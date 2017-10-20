@@ -3,10 +3,10 @@
 const gulpSourcemaps = require('gulp-sourcemaps')
     , vfs = require('vinyl-fs')
     , extend = require('extend')
-    , DEFAULTS = require('../defaults')
-    , filterFiles = require('../filter-files')
-    , buildSass = require('../build-sass')
-    , log = require('../utils').log;
+    , DEFAULTS = require('../core/defaults')
+    , filterFiles = require('../core/filter-files')
+    , buildSass = require('../core/build-sass')
+    , log = require('../core/utils').log;
 
 /**
  * Build Sass tasks
