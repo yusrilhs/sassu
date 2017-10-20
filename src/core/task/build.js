@@ -10,19 +10,20 @@ const gulpSourcemaps = require('gulp-sourcemaps')
 
 /**
  * Build Sass tasks
+ * @param   {String} workDir 
  * @param   {Object} opt
- * @return  {Void}
+ * @return  {stream}
  */
 module.exports = function(workDir, opts) {
     log('Starting build task');
     // Set options
     opts = extend(DEFAULTS, opts);
-
+    
     // Set working directory
     opts.workDir = workDir;
     
     // Filter for sass and scss only
-    filterFiles(opts)
+    return filterFiles(opts)
         .pipe(gulpSourcemaps.init())
         .pipe(buildSass(opts))
         .pipe(gulpSourcemaps.write('.'))
