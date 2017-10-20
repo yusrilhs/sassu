@@ -1,7 +1,7 @@
 {
   "name": "sassu",
   "version": "1.0.0",
-  "description": "Sassu is a command line utility for sass.",
+  "description": "Sassu is a simple command line utility for sass.",
   "main": "src/sassu.js",
   "bin": {
     "sassu": "bin/sassu"
