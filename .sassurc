@@ -5,29 +5,29 @@ dest: "./test/build"
 includePaths: 
   - "./test/includes"
 
-# Indent type for output CSS (space | tab)
+# Indent type for output CSS [space | tab]
 indentType: "space"
 
 # Indent width; number of spaces or tabs (maximum value: 10)
 indentWidth: 2
 
-# Linefeed style (cr | crlf | lf | lfcr)
+# Linefeed style [cr | crlf | lf | lfcr]
 linefeed: "lf"
 
 # CSS output styles for this build 
-# (nested | expanded | compact | compressed)
+# [nested | expanded | compact | compressed]
 outputStyles:
   compressed: true
   expanded: true
 
 # Extension for filename which prefered to outputStyles
-# (nested | expanded | compact | compressed)
+# [nested | expanded | compact | compressed]
 outputExtnames:
   compressed: ".min.css"
   expanded: ".css"
 
 # Source map which prefered to outputStyles
-# (nested | expanded | compact | compressed)
+# [nested | expanded | compact | compressed]
 outputSourcemaps:
   compressed: true
 
