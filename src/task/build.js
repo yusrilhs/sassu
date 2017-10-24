@@ -4,28 +4,29 @@ const gulpSourcemaps = require('gulp-sourcemaps')
     , vfs = require('vinyl-fs')
     , extend = require('extend')
     , DEFAULTS = require('../core/defaults')
-    , filterFiles = require('../core/filter-files')
     , buildSass = require('../core/build-sass')
-    , log = require('../core/utils').log;
+    , utils = require('../core/utils')
+    , log = utils.log
+    , logError = utils.logError;
 
 /**
  * Build Sass tasks
- * @param   {String} workDir 
- * @param   {Object} opt
+ * @param   {Array}     files 
+ * @param   {Object}    opts
  * @return  {stream}
  */
-module.exports = function(workDir, opts) {
+module.exports = function(files, opts) {
+    // Postcss plugins
+    let plugins = [];
+
     log('Starting build task');
     // Set options
     opts = extend(DEFAULTS, opts);
-    
-    // Set working directory
-    opts.workDir = workDir;
-    
+
     // Filter for sass and scss only
-    return filterFiles(opts)
+    return vfs.src(files)
         .pipe(gulpSourcemaps.init())
-        .pipe(buildSass(opts))
+        .pipe(buildSass(opts).on('error', logError))
         .pipe(gulpSourcemaps.write('.'))
         .pipe(vfs.dest(opts.dest));
 };
