@@ -9,11 +9,11 @@ const path = require('path')
 
 commander
     .version(pkg.version)
-    .option('-w, --watch        [dir]', 'Sass directory to watch')
-    .option('-b, --build        [dir | file]', 'Sass directory/file to build')
-    .option('-e, --ext          <extension>', 'Sass file extension. Default is sass,scss')
-    .option('-c, --config       [path]', 'path to .sassurc file. Default path is cwd')
-    .option('-g, --gen-config   [path]', 'Generate .sassurc into path. Default path is cwd')
+    .option('-w, --watch        [dir]', 'sass directory to watch, default path is cwd')
+    .option('-b, --build        [dir | file]', 'sass directory/file to build, default dir is cwd')
+    .option('-e, --ext          <extension>', 'sass file extension. default is sass,scss')
+    .option('-c, --config       [path]', 'path to .sassurc file. default path is cwd')
+    .option('-g, --gen-config   [path]', 'generate .sassurc into path. default path is cwd')
     .parse(process.argv);
 
 try {
