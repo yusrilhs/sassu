@@ -90,4 +90,15 @@ module.exports = function(mainFiles, pattern, opts, postcssPlugins) {
         
         buildTask(file, opts, postcssPlugins);
     });
+
+    watcher.on('unlink', function(file) {
+        log(`${chalk.red(file)} has been deleted`);
+        
+        if (path.basename(file).charAt(0) !== '_') {
+            let graphIndex = findGraphIndex(file);
+            if (graphIndex !== -1) {
+                graphs.splice(graphIndex, 1);
+            }
+        }
+    });
 };
