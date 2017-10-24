@@ -21,6 +21,8 @@ module.exports = function(files, opts, postcssPlugins) {
     log('Starting build task');
     // Set options
     opts = extend(DEFAULTS, opts);
+    // Set postcssPlugins
+    postcssPlugins = postcssPlugins || [];
 
     // Filter for sass and scss only
     let stream = vfs.src(files)
