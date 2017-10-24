@@ -1,9 +1,8 @@
 # Destination for this build
-dest: "./test/build"
+dest: "./dist"
 
 # Path to look for imported files
-includePaths: 
-  - "./test/includes"
+includePaths: false
 
 # Indent type for output CSS [space | tab]
 indentType: "space"
