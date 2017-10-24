@@ -47,7 +47,7 @@ let logError = function(str) {
 }
 
 // Silent while test module
-if (process.env.NODE_ENV == 'test') {
+if (process.env.NODE_ENV == 'test_unit_sassu') {
     log = function() {};
     logError = function() {};
 }
