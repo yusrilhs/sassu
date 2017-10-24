@@ -5,7 +5,7 @@ const path = require('path');
 /**
  * Get output option for build sass
  * @param  {String} outputStyle 
- * @param  {String} file        
+ * @param  {stream} file        
  * @return {Object}             
  */
 module.exports = function(outputStyle, file, opts) {
