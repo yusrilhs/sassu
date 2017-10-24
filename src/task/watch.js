@@ -11,11 +11,11 @@ const buildTask = require('./build')
 
 /**
  * Watch sass task
- * @param  {Array}  mainFiles
- * @param  {String} pattern 
- * @param  {Object} opts
- * @param  {Array}     postcssPlugins    
- * @return {Void}      
+ * @param  {Array}      mainFiles
+ * @param  {String}     pattern 
+ * @param  {Object}     opts
+ * @param  {Array}      postcssPlugins    
+ * @return {chokidar}      
  */
 module.exports = function(mainFiles, pattern, opts, postcssPlugins) {
     // Set options
@@ -101,4 +101,10 @@ module.exports = function(mainFiles, pattern, opts, postcssPlugins) {
             }
         }
     });
+
+    watcher.on('ready', function() {
+        log(chalk.cyan('Sassu now watch the file change!'));
+    });
+
+    return watcher;
 };
