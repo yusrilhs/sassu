@@ -67,7 +67,6 @@ module.exports = function(opts) {
             let sassPromised = new Promise(function(resolve, reject) {
                 sass.render(outputOption, function(err, result) {
                     if (err) {
-                        stream.emit('error', err);
                         return reject(err);
                     } else {
                         
@@ -82,6 +81,8 @@ module.exports = function(opts) {
 
                         // is have sourcemaps?
                         if (result.map) {
+                            // Modified from gulp-sass
+                            
                             // Re-format sourcemap into JSON
                             let sourceMap = JSON.parse(result.map.toString());
                             // Grab the stdout and transform it into stdin
@@ -120,6 +121,8 @@ module.exports = function(opts) {
                .then(function() {
                     cb();
                })
-               .catch(logError);
+               .catch(function(err) {
+                    stream.emit('error', err.formatted.replace(/\n/g, '\n' + ' '.repeat(11)));
+               });
     });
 };
