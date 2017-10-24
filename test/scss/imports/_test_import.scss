@@ -1,2 +1,4 @@
-$var1: 12px;
-$var2: 14px;
+@import "test_inner_import";
+
+$var1: 12px + $x;
+$var2: 14px + $y;
