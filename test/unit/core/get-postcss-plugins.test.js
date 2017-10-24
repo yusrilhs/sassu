@@ -8,6 +8,10 @@ const chai = require('chai')
 describe('Test module src/core/get-postcss-plugins.js', function() {
 
     it('Should return an empty array', function() {
+        utils.defaultOptions.autoprefixer = false;
+        utils.defaultOptions.flexbugs_fixes = false;
+        utils.defaultOptions.oldie = false;
+        
         let plugins = getPostcssPlugins(utils.defaultOptions);
 
         plugins.should.to.be.an('array');
