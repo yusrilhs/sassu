@@ -7,6 +7,7 @@ const fs = require('fs')
     , globby = require('globby')
     , sassGraph = require('sass-graph')
     , sassu = require('../sassu')
+    , getPostcssPlugins = require('./get-postcss-plugins')
     , utils = require('./utils')
     , log = utils.log
     , logError = utils.logError;
@@ -169,14 +170,15 @@ module.exports = function(program) {
         let config = getConfig(program.config),
             files = getFiles(program.build, program.ext, config.includePaths);
         
-        sassu.build(files.build, config);
+        sassu.build(files.build, config, getPostcssPlugins(config));
        
     // Is watch task?
     } else if (program.watch) {
         let config = getConfig(program.config),
-            files = getFiles(program.watch, program.ext, config.includePaths);
+            files = getFiles(program.watch, program.ext, config.includePaths),
+            postCssPlugins = getPostcssPlugins(config);
 
-        sassu.build(files.build, config)
+        sassu.build(files.build, config, postCssPlugins)
              .on('end', function() {
                 let watch = typeof program.watch === 'string' ? program.watch : process.cwd(); 
                 fs.lstat(watch, function(err, stats) {
@@ -184,7 +186,7 @@ module.exports = function(program) {
                         watch = path.dirname(watch);
                     }
 
-                    sassu.watch(files.build, path.join(watch, `**/*.{${files.ext}}`), config);
+                    sassu.watch(files.build, path.join(watch, `**/*.{${files.ext}}`), config, postCssPlugins);
                 });  
              });
     } else {

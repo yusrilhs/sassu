@@ -13,10 +13,11 @@ const buildTask = require('./build')
  * Watch sass task
  * @param  {Array}  mainFiles
  * @param  {String} pattern 
- * @param  {Object} opts    
+ * @param  {Object} opts
+ * @param  {Array}     postcssPlugins    
  * @return {Void}      
  */
-module.exports = function(mainFiles, pattern, opts) {
+module.exports = function(mainFiles, pattern, opts, postcssPlugins) {
     // Set options
     opts = extend(DEFAULTS, opts);
 
@@ -54,7 +55,7 @@ module.exports = function(mainFiles, pattern, opts) {
     }
 
     watcher.on('add', function(file) {
-        log(`File ${chalk.green(path.relative(process.cwd(), file))} added into watch task`);
+        log(`${chalk.green(path.relative(process.cwd(), file))} added into watch task`);
         if (path.basename(file).charAt(0) !== '_' && findGraphIndex(file) === -1) {
             let graph = sassGraph.parseFile(file, {
                 loadPaths: opts.includePaths
@@ -65,9 +66,9 @@ module.exports = function(mainFiles, pattern, opts) {
     });
 
     watcher.on('change', function(file) {
+        let files = [];
+
         if (path.basename(file).charAt(0) === '_') {
-            let files = [];
-            
             for(let i=0,len=graphs.length;i<len;i++) {
                 if (Object.keys(graphs[i].index).indexOf(file) === -1) continue;
 
@@ -78,16 +79,15 @@ module.exports = function(mainFiles, pattern, opts) {
                     }
                 });
             }
-
-            buildTask(files, opts);
         } else {
-            let graphIndex = findGraphIndex(file);
             // Refresh sass graph
-            graphs[graphIndex] = sassGraph.parseFile(file, {
+            graphs[findGraphIndex(file)] = sassGraph.parseFile(file, {
                 loadPaths: opts.includePaths
             });
 
-            buildTask(file, opts);
+            files.push(file);
         }
+        
+        buildTask(file, opts, postcssPlugins);
     });
 };
