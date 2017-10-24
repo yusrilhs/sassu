@@ -38,7 +38,10 @@ precision: 5
 sourceComments: false
 
 # Postcss autoprefixer configuration 
-autoprefixer: false
+autoprefixer: 
+  browsers:
+    - "Last 2 version"
+    - "ie >= 8"
 
 # Postcss oldie configuration
 oldie: false
