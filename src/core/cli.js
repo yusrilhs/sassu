@@ -190,6 +190,6 @@ module.exports = function(program) {
                 });  
              });
     } else {
-
+        console.log(program.helpInformation());
     }
 };
