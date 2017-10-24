@@ -1,0 +1,24 @@
+#!/usr/bin/env node
+'use strict';
+
+const path = require('path')
+    , commander = require('commander')
+    , logError = require('../src/core/utils').logError
+    , sassuCli = require('../src/core/cli')
+    , pkg = require('../package.json');
+
+commander
+    .version(pkg.version)
+    .option('-w, --watch        [dir | file]', 'Sass directory/file to watch')
+    .option('-b, --build        [dir | file]', 'Sass directory/file to build')
+    .option('-e, --ext          <extension>', 'Sass file extension. Default is sass,scss')
+    .option('-c, --config       [path]', 'path to .sassurc file. Default path is cwd')
+    .option('-g, --gen-config   [path]', 'Generate .sassurc into path. Default path is cwd')
+    .parse(process.argv);
+
+try {
+    sassuCli(commander);
+} catch(error) {
+    logError(error);
+    process.exit(1);
+}
