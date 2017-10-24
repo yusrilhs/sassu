@@ -12,6 +12,10 @@ const fs = require('fs')
     , log = utils.log
     , logError = utils.logError;
 
+function toStr(p) {
+    return (typeof p === 'string') ? p : '';
+}
+
 /**
  * Get .sassurc configuration file
  * @param  {Any}    cfg 
@@ -19,7 +23,7 @@ const fs = require('fs')
  */
 function getConfig(cfg) {
     // If that not a string let use blank string for configPath
-    let configPath = (typeof cfg === 'string') ? cfg : '';
+    let configPath = toStr(cfg);
     let resolvedConfigPath = path.resolve(process.cwd(), configPath);
     let sassurcFile = path.join(resolvedConfigPath, '.sassurc');
 
@@ -96,7 +100,7 @@ function getSassFiles(files) {
  * @return {Object}             
  */
 function getFiles(sourcePath, ext, includePaths) {
-    sourcePath = (typeof sourcePath === 'string') ? sourcePath : '';
+    sourcePath = toStr(sourcePath);
     let extname = path.extname(sourcePath),
         resolvedSourcePath = path.resolve(process.cwd(), sourcePath),
         ret;
@@ -149,8 +153,7 @@ module.exports = function(program) {
             sassurcDest;
 
         // If that not a string let use blank string
-        program.genConfig = (typeof program.genConfig === 'string') ? 
-                            program.genConfig : '';
+        program.genConfig = toStr(program.genConfig);
 
         resolvedPath = path.resolve(process.cwd(), program.genConfig);
 
