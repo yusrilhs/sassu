@@ -88,7 +88,7 @@ module.exports = function(mainFiles, pattern, opts, postcssPlugins) {
             files.push(file);
         }
         
-        buildTask(file, opts, postcssPlugins);
+        buildTask(files, opts, postcssPlugins);
     });
 
     watcher.on('unlink', function(file) {
