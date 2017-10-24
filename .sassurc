@@ -37,8 +37,11 @@ precision: 5
 # Include debug info in output
 sourceComments: false
 
-# Autoprefixer configuration 
+# Postcss autoprefixer configuration 
 autoprefixer: false
 
-# Oldie configuration
+# Postcss oldie configuration
 oldie: false
+
+# Postcss flexbugs fixes configuration
+flexbugs_fixes: false
