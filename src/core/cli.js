@@ -97,32 +97,41 @@ function getSassFiles(files) {
 function getFiles(sourcePath, ext, includePaths) {
     sourcePath = (typeof sourcePath === 'string') ? sourcePath : '';
     let extname = path.extname(sourcePath),
-        resolvedSourcePath = path.resolve(process.cwd(), sourcePath);
+        resolvedSourcePath = path.resolve(process.cwd(), sourcePath),
+        ret;
 
     log(`Finding sass file at ${chalk.blue(resolvedSourcePath)}`);
 
     if (extname === '.scss' || extname === '.sass') {
-        if (fs.existsSync(resolvedSourcePath)) {
+        if (fs.existsSync(resolvedSourcePath) && fs.lstatSync(resolvedPath).isFile()) {
             let parseGraph = sassGraph.parseFile(resolvedSourcePath, {
                 loadPaths: includePaths
             });
+            
+            ret = getSassFiles(Object.keys(parseGraph.index));
+            ret.ext = extname;
 
-            return getSassFiles(Object.keys(parseGraph.index));
+            return ret;
         } else {
             throw new Error(`File ${resolvedPath} doesn't exists`);
         }
     } else {
         let supportExt = getSupportExt(ext);
         // Another file extension
-        if (extname != '') throw new Error(`File with extension ${extname} doesn't support`);
+        if (extname != '' && fs.lstatSync(resolvedPath).isFile()) {
+            throw new Error(`File with extension ${extname} doesn't support`);
+        }
 
         let files = globby.sync([
             path.join(resolvedSourcePath, `**/*.{${supportExt}}`),
             path.join('!**/node_modules' , `**/*.{${supportExt}}`), // Ignore node_modules
             path.join('!**/bower_components' , `**/*.{${supportExt}}`) // Ignore bower_components
         ]);
-
-        return getSassFiles(files);
+        
+        ret = getSassFiles(files);
+        ret.ext = supportExt;
+        
+        return ret;
     }
 }
 
@@ -155,7 +164,7 @@ module.exports = function(program) {
             log(`.sassurc has been created on ${sassurcDest}`);
         }
         
-    // Is build task?
+    // Is build or watch task?
     } else if (program.build) {
         let config = getConfig(program.config),
             files = getFiles(program.build, program.ext, config.includePaths);
@@ -166,7 +175,18 @@ module.exports = function(program) {
     } else if (program.watch) {
         let config = getConfig(program.config),
             files = getFiles(program.watch, program.ext, config.includePaths);
-        
+
+        sassu.build(files.build, config)
+             .on('end', function() {
+                let watch = typeof program.watch === 'string' ? program.watch : process.cwd(); 
+                fs.lstat(watch, function(err, stats) {
+                    if (stats.isFile()) {
+                        watch = path.dirname(watch);
+                    }
+
+                    sassu.watch(files.build, path.join(watch, `**/*.{${files.ext}}`), config);
+                });  
+             });
     } else {
 
     }
