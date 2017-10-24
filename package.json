@@ -25,6 +25,7 @@
     "commander": "^2.11.0",
     "extend": "^3.0.1",
     "globby": "^6.1.0",
+    "gulp-postcss": "^7.0.0",
     "gulp-sourcemaps": "^2.6.1",
     "js-yaml": "^3.10.0",
     "node-sass": "^4.5.3",
