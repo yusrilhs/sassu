@@ -9,7 +9,7 @@ const path = require('path')
 
 commander
     .version(pkg.version)
-    .option('-w, --watch        [dir | file]', 'Sass directory/file to watch')
+    .option('-w, --watch        [dir]', 'Sass directory to watch')
     .option('-b, --build        [dir | file]', 'Sass directory/file to build')
     .option('-e, --ext          <extension>', 'Sass file extension. Default is sass,scss')
     .option('-c, --config       [path]', 'path to .sassurc file. Default path is cwd')
